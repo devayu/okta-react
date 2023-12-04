@@ -31,7 +31,7 @@ if ('useRouteMatch' in ReactRouterDom) {
 
 const SecureRoute: React.FC<{
   onAuthRequired?: OnAuthRequiredFunction;
-  errorComponent?: React.ComponentType<{ error: Error }>;
+  errorComponent?: React.FC<{ error: Error }>;
 } & ReactRouterDom.RouteProps & React.HTMLAttributes<HTMLDivElement>> = ({ 
   onAuthRequired,
   errorComponent,
