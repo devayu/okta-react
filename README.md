@@ -175,9 +175,11 @@ class App extends Component {
   render() {
     return (
       <Security oktaAuth={this.oktaAuth} restoreOriginalUri={this.restoreOriginalUri} >
-        <Route path='/' exact={true} component={Home} />
-        <SecureRoute path='/protected' component={Protected} />
-        <Route path='/login/callback' component={LoginCallback} />
+        <Routes>
+          <Route path='/' element={<Home />}/>
+          <SecureRoute path='/protected/*' element={<Protected />}/>
+          <Route path='/implicit/callback' element={<LoginCallback />} />
+        </Routes>
       </Security>
     );
   }
@@ -403,10 +405,14 @@ export default MessageList = () => {
 
 *(optional)* Callback function. Called when authentication is required. If this is not supplied, `okta-react` redirects to Okta. This callback will receive [oktaAuth][Okta Auth SDK] instance as the first function parameter. This is triggered when a [SecureRoute](#secureroute) is accessed without authentication. A common use case for this callback is to redirect users to a custom login route when authentication is required for a [SecureRoute](#secureroute).
 
+#### navigate
+
+*(optional)* Router-specific function to navigate to passed relative URL programmatically.
+
 #### Example
 
 ```jsx
-import { useHistory } from 'react-router-dom';
+import { useNavigate, Route, Routes, BrowserRouter as Router } from 'react-router-dom';
 import { OktaAuth, toRelativeUrl } from '@okta/okta-auth-js';
 
 const oktaAuth = new OktaAuth({
@@ -416,12 +422,12 @@ const oktaAuth = new OktaAuth({
 });
 
 export default App = () => {
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const customAuthHandler = (oktaAuth) => {
     // Redirect to the /login page that has a CustomLoginComponent
     // This example is specific to React-Router
-    history.push('/login');
+    navigate('/login');
   };
 
   const restoreOriginalUri = async (_oktaAuth, originalUri) => {
@@ -429,14 +435,18 @@ export default App = () => {
   };
 
   return (
-    <Security
-      oktaAuth={oktaAuth}
-      onAuthRequired={customAuthHandler}
-      restoreOriginalUri={restoreOriginalUri}
-    >
-      <Route path='/login' component={CustomLoginComponent}>
-      {/* some routes here */}
-    </Security>
+    <Router>
+      <Security
+        oktaAuth={oktaAuth}
+        onAuthRequired={customAuthHandler}
+        navigate={navigate}
+      >
+        <Routes>
+          <Route path='/login' element={<CustomLoginComponent />}>
+          {/* some routes here */}
+        </Routes>
+      </Security>
+    </Router>
   );
 };
 ```
@@ -450,6 +460,7 @@ Assuming you have configured your application to allow the `Authorization code` 
 
 ```jsx
 import { OktaAuth } from '@okta/okta-auth-js';
+import { Router, Route, Routes } from 'react-router-dom';
 
 const oktaAuth = new OktaAuth({
   issuer: 'https://{yourOktaDomain}/oauth2/default',
@@ -461,8 +472,10 @@ class App extends Component {
   render() {
     return (
       <Security oktaAuth={oktaAuth} restoreOriginalUri={restoreOriginalUri}>
-        <Route path='/' exact={true} component={Home} />
-        <Route path='/login/callback' component={LoginCallback} />
+        <Routes>
+            <Route path='/' element={<Home />}/>
+            <Route path='/login/callback' element={<LoginCallback />} />
+          </Routes>
       </Security>
     );
   }
@@ -488,8 +501,8 @@ class App extends Component {
 
 As with `Route` from `react-router-dom`, `<SecureRoute>` can take one of:
 
-- a `component` prop that is passed a component
-- a `render` prop that is passed a function that returns a component.  This function will be passed any additional props that react-router injects (such as `history` or `match`)
+As with `Route` from `react-router-dom` v6, `<SecureRoute>` can take one of:
+- a `element` prop that is passed a component
 - children components
 
 ### `LoginCallback`

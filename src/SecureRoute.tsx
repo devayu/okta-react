@@ -12,33 +12,25 @@
 
 import * as React from 'react';
 import { useOktaAuth, OnAuthRequiredFunction } from './OktaContext';
-import * as ReactRouterDom from 'react-router-dom';
-import { toRelativeUrl, AuthSdkError } from '@okta/okta-auth-js';
+import { RouteProps } from 'react-router';
+import * as RR from 'react-router-dom';
+import { toRelativeUrl } from '@okta/okta-auth-js';
 import OktaError from './OktaError';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let useMatch: any;
-if ('useRouteMatch' in ReactRouterDom) {
-  // trick static analyzer to avoid "'useRouteMatch' is not exported" error
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  useMatch = (ReactRouterDom as any)['useRouteMatch' in ReactRouterDom ? 'useRouteMatch' : ''];
-} else {
-  // throw when useMatch is triggered
-  useMatch = () => { 
-    throw new AuthSdkError('Unsupported: SecureRoute only works with react-router-dom v5 or any router library with compatible APIs. See examples under the "samples" folder for how to implement your own custom SecureRoute Component.');
-  };
-}
+const { Route } = RR;
+// react-router v6 exports useMatch, react-router v5 exports useRouteMatch
+const useMatch = Object.entries(RR).filter(([k, _v]) => k == 'useMatch' || k == 'useRouteMatch')[0][1];
 
 const SecureRoute: React.FC<{
   onAuthRequired?: OnAuthRequiredFunction;
-  errorComponent?: React.FC<{ error: Error }>;
-} & ReactRouterDom.RouteProps & React.HTMLAttributes<HTMLDivElement>> = ({ 
-  onAuthRequired,
+  errorComponent?: React.FC<{error: Error}>;
+} & RouteProps & React.HTMLAttributes<HTMLDivElement>> = ({ 
+  onAuthRequired, 
   errorComponent,
-  ...routeProps
+  ...routeProps 
 }) => { 
   const { oktaAuth, authState, _onAuthRequired } = useOktaAuth();
-  const match = useMatch(routeProps);
+  const { path, caseSensitive } = routeProps;
+  const match = path ? useMatch.call(null, { path, caseSensitive }) : null;
   const pendingLogin = React.useRef(false);
   const [handleLoginError, setHandleLoginError] = React.useState<Error | null>(null);
   const ErrorReporter = errorComponent || OktaError;
@@ -83,7 +75,8 @@ const SecureRoute: React.FC<{
     }  
 
   }, [
-    authState,
+    authState && authState.isPending,
+    authState && authState.isAuthenticated,
     oktaAuth, 
     match, 
     onAuthRequired, 
@@ -99,7 +92,7 @@ const SecureRoute: React.FC<{
   }
 
   return (
-    <ReactRouterDom.Route
+    <Route
       { ...routeProps }
     />
   );

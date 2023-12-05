@@ -16,11 +16,13 @@ export type OnAuthRequiredFunction = (oktaAuth: OktaAuth) => Promise<void> | voi
 export type OnAuthResumeFunction = () => void;
 
 export type RestoreOriginalUriFunction = (oktaAuth: OktaAuth, originalUri: string) => Promise<void> | void;
+export type NavigateFunction = (url: string) => void;
 
 export interface IOktaContext {
     oktaAuth: OktaAuth;
     authState: AuthState | null;
     _onAuthRequired?: OnAuthRequiredFunction;
+    navigate: NavigateFunction | undefined;
 }
 
 const OktaContext = React.createContext<IOktaContext | null>(null);

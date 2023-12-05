@@ -12,7 +12,7 @@
 
 import * as React from 'react';
 import { AuthSdkError, AuthState, OktaAuth } from '@okta/okta-auth-js';
-import OktaContext, { OnAuthRequiredFunction, RestoreOriginalUriFunction } from './OktaContext';
+import OktaContext, { OnAuthRequiredFunction, RestoreOriginalUriFunction, NavigateFunction } from './OktaContext';
 import OktaError from './OktaError';
 import { compare as compareVersions } from 'compare-versions';
 
@@ -28,11 +28,13 @@ const Security: React.FC<{
   oktaAuth: OktaAuth,
   restoreOriginalUri: RestoreOriginalUriFunction, 
   onAuthRequired?: OnAuthRequiredFunction,
+  navigate?: NavigateFunction,
   children?: React.ReactNode
 } & React.HTMLAttributes<HTMLDivElement>> = ({ 
   oktaAuth,
   restoreOriginalUri, 
   onAuthRequired, 
+  navigate, 
   children
 }) => { 
   const [authState, setAuthState] = React.useState(() => {
@@ -123,7 +125,8 @@ const Security: React.FC<{
     <OktaContext.Provider value={{ 
       oktaAuth, 
       authState, 
-      _onAuthRequired: onAuthRequired
+      _onAuthRequired: onAuthRequired, 
+      navigate
     }}>
       {children}
     </OktaContext.Provider>
