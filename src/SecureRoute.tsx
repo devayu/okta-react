@@ -81,9 +81,12 @@ const SecureRoute: React.FC<{
   }
 
   return (
-    <Route
-      { ...routeProps }
-    />
+    <RR.Routes>
+      <Route
+        { ...routeProps }
+      />
+    </RR.Routes>
+    
   );
 };
 
