@@ -17,20 +17,17 @@ import * as RR from 'react-router-dom';
 import { toRelativeUrl } from '@okta/okta-auth-js';
 import OktaError from './OktaError';
 const { Route } = RR;
-// react-router v6 exports useMatch, react-router v5 exports useRouteMatch
-const useMatch = Object.entries(RR).filter(([k, _v]) => k == 'useMatch' || k == 'useRouteMatch')[0][1];
 
 const SecureRoute: React.FC<{
   onAuthRequired?: OnAuthRequiredFunction;
-  errorComponent?: React.FC<{error: Error}>;
-} & RouteProps & React.HTMLAttributes<HTMLDivElement>> = ({ 
-  onAuthRequired, 
+  errorComponent?: React.FC<{ error: Error }>;
+} & RouteProps & React.HTMLAttributes<HTMLDivElement>> = ({
+  onAuthRequired,
   errorComponent,
-  ...routeProps 
-}) => { 
+  ...routeProps
+}) => {
+  const navigate = RR.useNavigate();
   const { oktaAuth, authState, _onAuthRequired } = useOktaAuth();
-  const { path, caseSensitive } = routeProps;
-  const match = path ? useMatch.call(null, { path, caseSensitive }) : null;
   const pendingLogin = React.useRef(false);
   const [handleLoginError, setHandleLoginError] = React.useState<Error | null>(null);
   const ErrorReporter = errorComponent || OktaError;
@@ -54,7 +51,7 @@ const SecureRoute: React.FC<{
     };
 
     // Only process logic if the route matches
-    if (!match) {
+    if (!routeProps.path) {
       return;
     }
 
@@ -67,21 +64,13 @@ const SecureRoute: React.FC<{
       return;
     }
 
-    // Start login if app has decided it is not logged in and there is no pending signin
-    if(!authState.isAuthenticated) { 
-      handleLogin().catch(err => {
+    // Start login if the app has decided it is not logged in and there is no pending signin
+    if (!authState.isAuthenticated) {
+      handleLogin().catch((err) => {
         setHandleLoginError(err as Error);
       });
-    }  
-
-  }, [
-    authState && authState.isPending,
-    authState && authState.isAuthenticated,
-    oktaAuth, 
-    match, 
-    onAuthRequired, 
-    _onAuthRequired
-  ]);
+    }
+  }, [authState, oktaAuth, onAuthRequired, _onAuthRequired, routeProps.path]);
 
   if (handleLoginError) {
     return <ErrorReporter error={handleLoginError} />;
